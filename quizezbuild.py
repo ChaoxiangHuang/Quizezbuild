@@ -1,5 +1,5 @@
 import streamlit as st
-import openai
+from openai import OpenAI
 import requests
 from datetime import datetime
 
@@ -22,11 +22,14 @@ allowed_attempts = st.number_input("Allowed Attempts", min_value=1, value=1)
 time_limit = st.number_input("Time Limit (minutes)", min_value=1, value=60)
 quiz_content = st.text_area("Quiz Content Prompt")
 
+
+
+
 if st.button("Generate and Publish Quiz"):
     if not (openai_api_key and canvas_api_key and canvas_course_id and quiz_content):
         st.error("Please fill in all required fields.")
     else:
-        openai.api_key = openai_api_key
+        client = OpenAI(api_key=openai_api_key)
         model_id = 'gpt-4o'
 
         # Combine date and time into Canvas-compatible timestamp
@@ -40,8 +43,8 @@ if st.button("Generate and Publish Quiz"):
             f"For example:\n\n1. What is 2 + 2?\na) 3\nb) [correct]4\nc) 5\nd) 6\n\nDon't put all content in one line."
         )
         conversation.append({"role": "user", "content": prompt})
-        response = openai.ChatCompletion.create(model=model_id, messages=conversation)
-        output = response.choices[0].message.content.strip()
+        response = client.responses.create(model=model_id, input=conversation)
+        output = response.output_text.strip()
 
         # Create Canvas quiz
         headers_canvas = {
